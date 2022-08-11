@@ -8,7 +8,7 @@ SWEP.Spawnable							= true
 -- Weapon configuration
 --
 SWEP.PrintName							= "FN FAMAS"
-SWEP.Slot								= 1
+SWEP.Slot								= 2
 
 --
 -- Appearance

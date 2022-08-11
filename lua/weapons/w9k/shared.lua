@@ -3,7 +3,7 @@ AddCSLuaFile()
 SWEP.Base								= "weapon_base" -- bastard of it all
 
 SWEP.Category							= "W9K"
-SWEP.Spawnable							= true
+SWEP.Spawnable							= false
 SWEP.DrawCrosshair						= true
 
 --
@@ -219,6 +219,8 @@ function SWEP:Deploy()
 	self:SendWeaponAnim( ACT_VM_DRAW )
 	self:SetPlaybackRate( 1 )
 	self:SetReloadingTime( CurTime() + self:SequenceDuration() )
+	self:SetStopSightTime( CurTime() + self:SequenceDuration() * 0.5 )
+	self:SetLoadIn( -1 )
 	return true
 end
 
@@ -226,6 +228,7 @@ function SWEP:Holster()
 	self:SendWeaponAnim( ACT_VM_HOLSTER )
 	self:SetPlaybackRate( 1 )
 	self:SetReloadingTime( CurTime() + self:SequenceDuration() )
+	self:SetLoadIn( -1 )
 	return true
 end
 
@@ -450,4 +453,11 @@ function SWEP:GetViewModelPosition(pos, ang)
 	pos:Add( opos.z * ang:Up() )
 
 	return pos, ang
+end
+
+--
+-- UI & Crosshair
+--
+function SWEP:DoDrawCrosshair()
+	return true
 end
