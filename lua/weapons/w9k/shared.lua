@@ -95,15 +95,17 @@ function SWEP:SetupDataTables()
 	self:NetworkVar("Float", 7, "RecoilY")
 	self:NetworkVar("Float", 8, "Spread")
 	self:NetworkVar("Float", 9, "SpreadDelayTime")
+	self:NetworkVar("Float", 10, "NextMechFire")
 
 	self.Primary.DefaultClip = self:GetMaxClip1() * 2
 	self:SetFiremode(1)
+	self:SetNextMechFire(0)
 end
 
 local unavailable = {
 	Count = 1,
 	Delay = 0.2,
-	PostBurstDelay = 0.2,
+	PostBurstDelay = 0,
 }
 function SWEP:GetFiremodeTable()
 	if self:Clip1() == 0 then
@@ -129,6 +131,10 @@ function SWEP:PrimaryAttack()
 		return false
 	end
 
+	if self:GetNextMechFire() > CurTime() then
+		return false
+	end
+
 	if self:GetReloadingTime() > CurTime() then
 		return false
 	end
@@ -137,12 +143,7 @@ function SWEP:PrimaryAttack()
 		return false
 	end
 
-	if (self:GetBurstCount() + 1) > self:GetFiremodeTable().Count then
-		if !self:GetFiredLastShot() and self:GetBurstCount() == self:GetFiremodeTable().Count then
-			print("doing")
-			self:SetNextPrimaryFire( CurTime() + self:GetFiremodeTable().PostBurstDelay )
-			self:SetFiredLastShot(true)
-		end
+	if self:GetFiredLastShot() then--(self:GetBurstCount() + 1) > self:GetFiremodeTable().Count then
 		return false
 	end
 
@@ -336,22 +337,51 @@ function SWEP:Think()
 		self:SetSpread( math.Approach(self:GetSpread(), 0, FrameTime() * self.SpreadShotDecay ) )
 	end
 
-	if !self:GetOwner():KeyDown(IN_ATTACK) then
-		if self:GetBurstCount() != 0 and self:GetBurstCount() == self:GetFiremodeTable().Count then
-			self:SetBurstCount( 0 )
-			self:SetFiredLastShot(false)
-		elseif self:GetBurstCount() != 0 then
-			--if true then
-			--	if ( ( game.SinglePlayer() and SERVER ) or ( !game.SinglePlayer() ) ) then
-			--		self:PrimaryAttack()
-			--	end
-			--else
-				self:SetBurstCount( 0 )
-				self:SetNextPrimaryFire( CurTime() + self:GetFiremodeTable().PostBurstDelay ) -- Can feel uncomfortable.
-				self:SetFiredLastShot(false)
-			--end
+	print( self:GetBurstCount() )
+
+	--if false then	
+	local runoff = false
+	if runoff and self:GetBurstCount() != 0 then
+		if ( ( game.SinglePlayer() and SERVER ) or ( !game.SinglePlayer() ) ) then
+			self:PrimaryAttack()
 		end
 	end
+	if self:GetBurstCount() >= self:GetFiremodeTable().Count then
+		self:SetBurstCount( 0 )
+		self:SetNextMechFire( CurTime() + self:GetFiremodeTable().PostBurstDelay ) -- Can feel uncomfortable.
+		self:SetFiredLastShot( true )
+	elseif !self:GetOwner():KeyDown(IN_ATTACK) and self:GetBurstCount() != 0 then
+		self:SetBurstCount( 0 )
+		self:SetNextMechFire( CurTime() + self:GetFiremodeTable().PostBurstDelay ) -- Can feel uncomfortable.
+	end
+	if !self:GetOwner():KeyDown(IN_ATTACK) then
+		self:SetFiredLastShot(false)
+	end
+	
+	--[[
+	if self:GetBurstCount() != 0 then
+		if ( ( game.SinglePlayer() and SERVER ) or ( !game.SinglePlayer() ) ) then
+			self:PrimaryAttack()
+		end
+	else
+		if !self:GetFiredLastShot() and self:GetBurstCount() != 0 and self:GetBurstCount() == self:GetFiremodeTable().Count then
+			self:SetBurstCount( 0 )
+			self:SetFiredLastShot(true)
+			self:SetNextMechFire( CurTime() + self:GetFiremodeTable().PostBurstDelay ) -- Can feel uncomfortable.
+			print("doing from finish", CurTime())
+		elseif !self:GetOwner():KeyDown(IN_ATTACK) and self:GetBurstCount() != 0 then
+			self:SetBurstCount( 0 )
+			self:SetNextMechFire( CurTime() + self:GetFiremodeTable().PostBurstDelay ) -- Can feel uncomfortable.
+			print("doing from last", CurTime())
+		end
+	end
+	if !self:GetOwner():KeyDown(IN_ATTACK) then
+		if self:GetFiredLastShot() and self:GetBurstCount() != 0 and self:GetBurstCount() == self:GetFiremodeTable().Count then
+			self:SetBurstCount( 0 )
+		end
+		self:SetFiredLastShot(false)
+	end
+	]]
 end
 
 function SWEP:SendAnim( act, hold )

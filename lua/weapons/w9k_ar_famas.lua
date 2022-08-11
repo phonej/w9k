@@ -43,7 +43,7 @@ SWEP.Firemodes = {
 	{
 		Count = 3,
 		Delay = ( 60 / 950 ),
-		PostBurstDelay = 0.2,
+		PostBurstDelay = 0.3,
 	},
 	{
 		Count = math.huge,
