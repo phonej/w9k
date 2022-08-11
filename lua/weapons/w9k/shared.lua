@@ -340,7 +340,7 @@ function SWEP:Think()
 	print( self:GetBurstCount() )
 
 	--if false then	
-	local runoff = false
+	local runoff = true
 	if runoff and self:GetBurstCount() != 0 then
 		if ( ( game.SinglePlayer() and SERVER ) or ( !game.SinglePlayer() ) ) then
 			self:PrimaryAttack()
