@@ -24,7 +24,7 @@ SWEP.ShootSound							= ")weapons/sig_p228/p228-1.wav"
 SWEP.ShootSound_Level					= 80
 SWEP.ShootAmb_Level						= 160
 SWEP.ShootSoundSilenced					= "weapons/pistol/pistol_fire3.wav"
-SWEP.ShootAmbInt						= "weapons/pistol/pistol_fire3.wav"
+SWEP.ShootAmbInt						= ")w9k/fesiug/distant_rifle.ogg"
 SWEP.ShootAmbExt						= ")w9k/fesiug/distant_pistol.ogg"
 
 -- Recoil
