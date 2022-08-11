@@ -23,7 +23,6 @@ SWEP.Primary.ClipSize					= -1
 SWEP.Primary.DefaultClip				= 0
 SWEP.Primary.Ammo						= "none"
 
-
 SWEP.ShootSound							= ")weapons/sig_p228/p228-1.wav"
 SWEP.ShootSound_Level					= 70
 SWEP.ShootAmb_Level						= 140
@@ -42,8 +41,7 @@ SWEP.Firemodes = {
 SWEP.IronSights = {
 	Pos = Vector(0, 0, 0),
 	Ang = Angle(0, 0, 0),
-	FOV = 70,
-	VFOV = 50,
+	Mag = 1.1,
 }
 
 --
@@ -61,9 +59,15 @@ SWEP.Secondary.DefaultClip				= 0
 SWEP.Secondary.Automatic				= true
 SWEP.Secondary.Ammo						= "none"
 
+SWEP.RecoilUp = 2 -- degrees punched
+SWEP.RecoilUpDrift = 0.5 -- 50% will be smoothed
+SWEP.RecoilDecay = 10 -- 10 degrees per second
+SWEP.RecoilCS = false -- recoil returns
+
 function SWEP:Initalize()
 	self.Primary.Automatic = true
 	self.Secondary.Automatic = true
+
 end
 
 function SWEP:SetupDataTables()
@@ -75,7 +79,12 @@ function SWEP:SetupDataTables()
 	self:NetworkVar("Float", 2, "IdleIn")
 	self:NetworkVar("Float", 3, "ReloadingTime")
 	self:NetworkVar("Float", 4, "StopSightTime")
+	self:NetworkVar("Float", 5, "SprintDelta")
 
+	self:NetworkVar("Float", 6, "RecoilP")
+	self:NetworkVar("Float", 7, "RecoilY")
+
+	self.Primary.DefaultClip = self:GetMaxClip1() * 2
 	self:SetFiremode(1)
 end
 
@@ -96,6 +105,8 @@ function SWEP:SwitchFireMode(next)
 	-- lol?
 end
 
+local HUToM = 0.0254
+
 --
 -- Firing function
 --
@@ -107,6 +118,10 @@ function SWEP:PrimaryAttack()
 	end
 
 	if self:GetReloadingTime() > CurTime() then
+		return false
+	end
+
+	if self:GetSprintDelta() > 0.5 then
 		return false
 	end
 
@@ -127,8 +142,57 @@ function SWEP:PrimaryAttack()
 	self:EmitSound( self.ShootSound, self.ShootSound_Level )
 
 	self:SendWeaponAnim( ACT_VM_PRIMARYATTACK )
+
+	local bullet = {
+		RangeNear = self.RangeNear / HUToM,
+		RangeFar = self.RangeFar / HUToM,
+		DamageNear = self.DamageNear,
+		DamageFar = self.DamageFar,
+	}
+	self:FireBullet(bullet)
+
+	local p = self:GetOwner()
+	if !IsValid(p) then p = false end
+	if p then
+		if ( game.SinglePlayer() and SERVER ) or ( CLIENT and !game.SinglePlayer() and IsFirstTimePredicted() ) then
+			p:SetEyeAngles( p:EyeAngles() + Angle( (-self.RecoilUp * ( self.RecoilCS and 1 or self.RecoilUpDrift ) ), 0 ) )
+		end
+		self:SetRecoilP( self:GetRecoilP() + (-self.RecoilUp * ( self.RecoilCS and 1 or self.RecoilUpDrift ) ) )
+	end
 	
 	return true
+end
+
+-- Bullets
+function SWEP:FireBullet(bullet)
+	bullet.Src = self.Owner:GetShootPos()
+	bullet.Dir = self.Owner:GetAimVector()
+	bullet.Callback = function( atk, tr, dmg )
+		-- Thank you Arctic, very cool
+		local ent = tr.Entity
+
+		dmg:SetDamage( bullet.DamageNear )
+		dmg:SetDamageType( DMG_BULLET )
+
+		if IsValid(ent) then
+			local d = dmg:GetDamage()
+			local min, max = bullet.RangeNear, bullet.RangeFar
+			local range = atk:GetPos():Distance(ent:GetPos())
+			local XD = 0
+			if range < min then
+				XD = 0
+			else
+				XD = math.Clamp((range - min) / (max - min), 0, 1)
+			end
+
+
+			dmg:SetDamage( Lerp( 1-XD, bullet.DamageFar, bullet.DamageNear ) )
+			print( math.Round( (1-XD) * 100 ) .. "% effectiveness\t", math.floor( dmg:GetDamage() ) )
+		end
+		return
+	end
+
+	self:GetOwner():FireBullets( bullet )
 end
 
 -- No secondary
@@ -191,6 +255,7 @@ end
 function SWEP:Think()
 	local capableofads = self:GetStopSightTime() <= CurTime() -- replace with GetReloading
 	self:SetSightDelta( math.Approach( self:GetSightDelta(), (capableofads and self:GetOwner():KeyDown(IN_ATTACK2) and 1 or 0), FrameTime() / 0.4 ) )
+	self:SetSprintDelta( math.Approach( self:GetSprintDelta(), (self:GetOwner():IsSprinting() and 1 or 0), FrameTime() / 0.4 ) )
 
 	if self:GetLoadIn() > 0 and self:GetLoadIn() <= CurTime() then
 		self:Refill(self:Clip1())
@@ -199,6 +264,18 @@ function SWEP:Think()
 	
 	if self:GetIdleIn() > 0 and self:GetIdleIn() <= CurTime() then
 		self:SendAnim( ACT_VM_IDLE, 1, false )
+	end
+
+	local p = self:GetOwner()
+	if !IsValid(p) then p = false end
+	if p then
+		local rp = self:GetRecoilP()
+		local ry = self:GetRecoilY()
+		if rp != 0 then
+			local remove = rp - math.Approach( rp, 0, FrameTime() * ( self.RecoilDecay or 4 ) )
+			p:SetEyeAngles( p:EyeAngles() + ( Angle( remove*1, 0 ) * ( self.RecoilCS and -1 or 1 ) ) )
+			self:SetRecoilP( rp - remove )
+		end
 	end
 
 	if !self:GetOwner():KeyDown(IN_ATTACK) and self:GetBurstCount() != 0 and self:GetBurstCount() == self:GetFiremodeTable().Count then
@@ -237,11 +314,28 @@ function SWEP:SendAnim( act, hold )
 end
 
 function SWEP:TranslateFOV( fov )
-	return fov / Lerp( math.ease.InOutQuad( self:GetSightDelta() ), 1, 1.1 )
+	return fov / Lerp( math.ease.InOutQuad( self:GetSightDelta() ), 1, self.IronSights.Mag )
+end
+
+function SWEP:GetMovement()
+	local p = self:GetOwner()
+	if !IsValid(p) then
+		return 0
+	end
+
+	if !p:IsPlayer() then
+		return 0
+	end
+
+	if p:IsSprinting() then
+		return 2
+	end
 end
 
 SWEP.BobScale = 1
 SWEP.SwayScale = 1
+
+local cancelsprint = 0
 
 function SWEP:GetViewModelPosition(pos, ang)
 	local opos, oang = Vector(), Angle()
@@ -251,12 +345,44 @@ function SWEP:GetViewModelPosition(pos, ang)
 		local si = self:GetSightDelta()
 		self.BobScale = 1-si
 		self.SwayScale = 1-si
-		--self:GetOwner():SetFOV( math.sin(CurTime())*45 + 45, 0 )
 		self.ViewModelFOV = self.ViewModelFOVBase--Lerp( si, self.ViewModelFOVBase, self.IronSights.VFOV )
 
 		b_pos:Add( self.IronSights.Pos )
 		b_pos:Mul( math.ease.InOutSine( si ) )
 		b_ang:Add( self.IronSights.Ang )
+		b_ang:Mul( math.ease.InOutSine( si ) )
+
+		opos:Add( b_pos )
+		oang:Add( b_ang )
+		
+		local b_pos, b_ang = Vector(), Angle()
+		local xi = si
+
+		if xi >= 0.5 then
+			xi = xi - 0.5
+			xi = 0.5 - xi
+		end
+		xi = xi * 2
+
+		b_pos:Add( Vector( -0.5, -2, -0 ) )
+		b_pos:Mul( math.ease.InOutSine( xi ) )
+		b_ang:Add( Angle( -4, 0, -5 ) )
+		b_ang:Mul( math.ease.InOutSine( xi ) )
+
+		opos:Add( b_pos )
+		oang:Add( b_ang )
+	end
+
+	do -- sprinting
+		local b_pos, b_ang = Vector(), Angle()
+		local si = self:GetSprintDelta()
+
+		cancelsprint = math.Approach( cancelsprint, (self:GetStopSightTime() > CurTime() and 0 or 1), FrameTime() / 0.4 )
+		si = math.min(si, cancelsprint)
+
+		b_pos:Add( self.RunSightsPos )
+		b_pos:Mul( math.ease.InOutSine( si ) )
+		b_ang:Add( self.RunSightsAng )
 		b_ang:Mul( math.ease.InOutSine( si ) )
 
 		opos:Add( b_pos )

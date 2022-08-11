@@ -8,7 +8,7 @@ SWEP.Spawnable							= true
 -- Weapon configuration
 --
 SWEP.PrintName							= "SIG P229R"
-SWEP.Slot								= 2
+SWEP.Slot								= 1
 
 --
 -- Appearance
@@ -27,6 +27,9 @@ SWEP.DamageFar							= 20
 SWEP.RangeNear							= 15
 SWEP.RangeFar							= 30
 
+SWEP.RunSightsPos = Vector(3.444, -7.823, -6.27)
+SWEP.RunSightsAng = Angle(60.695, 0, 0)
+
 -- Ability
 SWEP.Firemodes = {
 	{
@@ -39,8 +42,7 @@ SWEP.Firemodes = {
 SWEP.IronSights = {
 	Pos = Vector(-2.653, -0.686, 1.06),
 	Ang = Angle(0.3, 0, 0),
-	FOV = 70,
-	VFOV = 60,
+	Mag = 1.1,
 }
 
 SWEP.Animations = {

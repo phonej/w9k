@@ -1,0 +1,90 @@
+ClassName						Base							ViewModelFlip
+
+m9k_winchester73				bobs_shotty_base				true
+m9k_acr							bobs_gun_base					true
+m9k_ak47						bobs_gun_base					true
+m9k_ak74						bobs_gun_base					true
+m9k_amd65						bobs_gun_base					true
+m9k_an94						bobs_gun_base					true
+	-	m9k_val							bobs_gun_base					false
+m9k_f2000						bobs_scoped_base				true
+	-	m9k_famas						bobs_gun_base					false
+	-	m9k_fal							bobs_gun_base					false
+m9k_g36							bobs_gun_base					true
+	-	m9k_m416						bobs_gun_base					false
+	-	m9k_g3a3						bobs_gun_base					false
+m9k_l85							bobs_scoped_base				true
+	-	m9k_m14sp						bobs_gun_base					false
+m9k_m16a4_acog					bobs_scoped_base				true
+m9k_m4a1						bobs_gun_base					true
+	-	m9k_scar						bobs_gun_base					false
+	-	m9k_vikhr						bobs_gun_base					false
+m9k_auga3						bobs_scoped_base				true
+	-	m9k_tar21						bobs_gun_base					false
+	-	m9k_ares_shrike					bobs_gun_base					false
+m9k_fg42						bobs_gun_base					true
+	-	m9k_minigun						bobs_gun_base					false
+m9k_m1918bar					bobs_gun_base					true
+	-	m9k_m249lmg						bobs_gun_base					false
+	-	m9k_m60							bobs_gun_base					false
+	-	m9k_pkm							bobs_gun_base					false
+	-	m9k_colt1911					bobs_gun_base					false
+	-	m9k_coltpython					bobs_gun_base					false
+	-	m9k_deagle						bobs_gun_base					false
+	-	m9k_usp							bobs_gun_base					false
+m9k_glock						bobs_gun_base					true
+	-	m9k_hk45						bobs_gun_base					false
+	-	m9k_m29satan					bobs_gun_base					false
+	-	m9k_m92beretta					bobs_gun_base					false
+m9k_luger						bobs_gun_base					true
+m9k_ragingbull					bobs_gun_base					true
+m9k_scoped_taurus				bobs_scoped_base				true
+m9k_remington1858				bobs_gun_base					true
+m9k_model3russian				bobs_gun_base					true
+	-	m9k_model500					bobs_gun_base					false
+	-	m9k_sig_p229r					bobs_gun_base					false
+m9k_model627					bobs_gun_base					true
+m9k_m3							bobs_shotty_base				true
+m9k_browningauto5				bobs_shotty_base				true
+	-	m9k_dbarrel						bobs_shotty_base				false
+m9k_ithacam37					bobs_shotty_base				true
+	-	m9k_mossberg590					bobs_shotty_base				false
+m9k_jackhammer					bobs_gun_base					true
+	-	m9k_remington870				bobs_shotty_base				false
+m9k_spas12						bobs_shotty_base				true
+m9k_striker12					bobs_shotty_base				true
+m9k_usas						bobs_gun_base					true
+m9k_1897winchester				bobs_shotty_base				true
+m9k_1887winchester				bobs_shotty_base				true
+m9k_aw50						bobs_scoped_base				true
+m9k_barret_m82					bobs_scoped_base				true
+	-	m9k_m98b						bobs_scoped_base				false
+	-	m9k_svu							bobs_scoped_base				false
+m9k_sl8							bobs_scoped_base				true
+m9k_intervention				bobs_scoped_base				true
+m9k_m24							bobs_scoped_base				true
+m9k_psg1						bobs_scoped_base				true
+m9k_remington7615p				bobs_scoped_base				true
+	-	m9k_dragunov					bobs_scoped_base				false
+	-	m9k_svt40						bobs_scoped_base				false
+	-	m9k_contender					bobs_scoped_base				false
+	-	m9k_damascus					bobs_gun_base					false
+	-	m9k_davy_crockett				bobs_gun_base					false
+	-	m9k_ex41						bobs_shotty_base				false
+	-	m9k_fists						bobs_gun_base					false
+m9k_m61_frag					bobs_nade_base					true
+	-	m9k_harpoon						bobs_gun_base					false
+	-	m9k_ied_detonator				bobs_gun_base					false
+	-	m9k_knife						bobs_gun_base					false
+	-	m9k_m202						bobs_gun_base					false
+	-	m9k_m79gl						bobs_shotty_base				false
+	-	m9k_machete						bobs_gun_base					false
+	-	m9k_matador						bobs_scoped_base				false
+m9k_milkormgl					bobs_shotty_base				true
+m9k_nerve_gas					bobs_nade_base					true
+m9k_nitro						bobs_nade_base					true
+	-	m9k_orbital_strike				bobs_scoped_base				false
+	-	m9k_proxy_mine					bobs_gun_base					false
+	-	m9k_rpg7						bobs_gun_base					false
+m9k_sticky_grenade				bobs_nade_base					true
+	-	m9k_suicide_bomb				bobs_gun_base					false
