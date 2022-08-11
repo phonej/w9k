@@ -144,9 +144,11 @@ function SWEP:PrimaryAttack()
 	self:TakePrimaryAmmo( ammototake )
 	self:SetNextPrimaryFire( CurTime() + self:GetFiremodeTable().Delay )
 	self:SetBurstCount( self:GetBurstCount() + 1 )
-	self:EmitSound( self.ShootSound, self.ShootSound_Level )
+	self:PSound( self.ShootSound, self.ShootSound_Level )
 
-	self:SendWeaponAnim( ACT_VM_PRIMARYATTACK )
+	if self:GetSightDelta() < 0.5 then
+		self:SendAnim( "fire" )
+	end
 
 	local bullet = {
 		RangeNear = self.RangeNear / HUToM,
@@ -155,6 +157,10 @@ function SWEP:PrimaryAttack()
 		DamageFar = self.DamageFar,
 	}
 	self:FireBullet(bullet)
+
+	if game.SinglePlayer() then
+		self:CallOnClient("PrimaryAttack_SP")
+	end
 
 	local p = self:GetOwner()
 	if !IsValid(p) then p = false end
@@ -166,6 +172,11 @@ function SWEP:PrimaryAttack()
 	end
 	
 	return true
+end
+
+local fuckads = 0
+function SWEP:PrimaryAttack_SP()
+	fuckads = 2
 end
 
 -- Bullets
@@ -256,6 +267,15 @@ function SWEP:TakePrimaryAmmo( amount )
 	self:SetClip1( self:Clip1() - 1 )
 end
 
+-- Play sound
+function SWEP:PSound(snd, lvl, pitch, vol, chan)
+	local sond = snd
+	if istable(snd) then
+		sond = table.Random(snd)
+	end
+	self:EmitSound(sond, lvl, pitch, vol, chan)
+end
+
 -- Thinking
 function SWEP:Think()
 	local capableofads = self:GetStopSightTime() <= CurTime() and !self:GetOwner():IsSprinting() -- replace with GetReloading
@@ -289,7 +309,7 @@ function SWEP:Think()
 end
 
 function SWEP:SendAnim( act, hold )
-	local anim = self.Animations["reload"]
+	local anim = self.Animations[act]
 	self:SendWeaponAnim( anim.Source )
 	self:SetPlaybackRate( anim.Mult or 1 )
 
@@ -406,6 +426,16 @@ function SWEP:GetViewModelPosition(pos, ang)
 		b_pos:Mul( math.ease.InOutSine( xi ) )
 		b_ang:Add( Angle( -4, 0, -15 ) )
 		b_ang:Mul( math.ease.InOutSine( xi ) )
+
+		opos:Add( b_pos )
+		oang:Add( b_ang )
+	end
+
+	do -- fuck ads
+		local b_pos, b_ang = Vector(), Angle()
+
+		b_pos:Add( oang:Right() * fuckads )
+		fuckads = math.Approach( fuckads, 0, FrameTime() * 10 )
 
 		opos:Add( b_pos )
 		oang:Add( b_ang )

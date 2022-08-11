@@ -14,44 +14,59 @@ SWEP.Slot								= 1
 -- Appearance
 --
 SWEP.ViewModel				= "models/weapons/v_tct_famas.mdl"
-SWEP.ViewModelFOV			= 64
 SWEP.WorldModel				= "models/weapons/w_tct_famas.mdl"
+SWEP.ViewModelFOVBase		= 64
 
 -- Capacity
 SWEP.Primary.ClipSize					= 30
 SWEP.Primary.Ammo						= "smg1"
 
+-- Sound
+SWEP.ShootSound							= {
+	")weapons/fokku_tc_famas/shot-1.wav", 
+	")weapons/fokku_tc_famas/shot-2.wav"
+}
+SWEP.ShootSound_Level					= 70
+SWEP.ShootAmb_Level						= 140
+SWEP.ShootSoundSilenced					= "weapons/pistol/pistol_fire3.wav"
+SWEP.ShootAmbInt						= "weapons/pistol/pistol_fire3.wav"
+SWEP.ShootAmbExt						= "weapons/pistol/pistol_fire3.wav"
+
 -- Damage
-SWEP.DamageNear							= 30
+SWEP.DamageNear							= 22
 SWEP.DamageFar							= 20
-SWEP.RangeNear							= 15
-SWEP.RangeFar							= 30
+SWEP.RangeNear							= 25
+SWEP.RangeFar							= 50
 
 -- Ability
 SWEP.Firemodes = {
 	{
 		Count = math.huge,
-		Delay = ( 60 / 450 ),
+		Delay = ( 60 / 950 ),
 		PostBurstDelay = 0,
 	}
 }
 
 SWEP.IronSights = {
-	Pos = Vector(-2.653, -0.686, 1.06),
-	Ang = Angle(0.3, 0, 0),
-	Mag = 1.1,
+	Pos = Vector(-3.342, 0, 0.247),
+	Ang = Angle(0, -0.438, 0),
+	Mag = 1.3,
 }
 
 SWEP.RunPose = {
-	Pos = Vector(3.444, -7.823, -6.27),
-	Ang = Angle(60.695, 0, 0),
+	Pos = Vector(0.9926, -3.6313, 0.4169),
+	Ang = Angle(-9.1165, 43.8507, -18.2067),
 }
 
 SWEP.Animations = {
+	["fire"] = {
+		Source = ACT_VM_PRIMARYATTACK,
+		Mult = 1,
+	},
 	["reload"] = {
 		Source = ACT_VM_RELOAD,
 		Mult = 1,
-		StopSightTime = 2.3,
-		LoadIn = 1.9,
+		StopSightTime = 2.8,
+		LoadIn = 2.2,
 	},
 }

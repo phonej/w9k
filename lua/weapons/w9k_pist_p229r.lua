@@ -14,8 +14,8 @@ SWEP.Slot								= 1
 -- Appearance
 --
 SWEP.ViewModel				= "models/weapons/v_sick_p228.mdl"
-SWEP.ViewModelFOV			= 64
 SWEP.WorldModel				= "models/weapons/w_sig_229r.mdl"
+SWEP.ViewModelFOVBase		= 64
 
 -- Capacity
 SWEP.Primary.ClipSize					= 12
@@ -48,6 +48,10 @@ SWEP.RunPose = {
 }
 
 SWEP.Animations = {
+	["fire"] = {
+		Source = ACT_VM_PRIMARYATTACK,
+		Mult = 1,
+	},
 	["reload"] = {
 		Source = ACT_VM_RELOAD,
 		Mult = 1,
