@@ -44,6 +44,11 @@ SWEP.IronSights = {
 	Mag = 1.1,
 }
 
+SWEP.RunPose = {
+	Pos = Vector(3.444, -7.823, -6.27),
+	Ang = Angle(60.695, 0, 0),
+}
+
 --
 -- Useless shit that you should NEVER touch
 --
@@ -121,7 +126,7 @@ function SWEP:PrimaryAttack()
 		return false
 	end
 
-	if self:GetSprintDelta() > 0.5 then
+	if self:GetSprintDelta() > 0.2 then
 		return false
 	end
 
@@ -253,7 +258,7 @@ end
 
 -- Thinking
 function SWEP:Think()
-	local capableofads = self:GetStopSightTime() <= CurTime() -- replace with GetReloading
+	local capableofads = self:GetStopSightTime() <= CurTime() and !self:GetOwner():IsSprinting() -- replace with GetReloading
 	self:SetSightDelta( math.Approach( self:GetSightDelta(), (capableofads and self:GetOwner():KeyDown(IN_ATTACK2) and 1 or 0), FrameTime() / 0.4 ) )
 	self:SetSprintDelta( math.Approach( self:GetSprintDelta(), (self:GetOwner():IsSprinting() and 1 or 0), FrameTime() / 0.4 ) )
 
@@ -380,9 +385,9 @@ function SWEP:GetViewModelPosition(pos, ang)
 		cancelsprint = math.Approach( cancelsprint, (self:GetStopSightTime() > CurTime() and 0 or 1), FrameTime() / 0.4 )
 		si = math.min(si, cancelsprint)
 
-		b_pos:Add( self.RunSightsPos )
+		b_pos:Add( self.RunPose.Pos )
 		b_pos:Mul( math.ease.InOutSine( si ) )
-		b_ang:Add( self.RunSightsAng )
+		b_ang:Add( self.RunPose.Ang )
 		b_ang:Mul( math.ease.InOutSine( si ) )
 
 		opos:Add( b_pos )
@@ -397,9 +402,9 @@ function SWEP:GetViewModelPosition(pos, ang)
 		end
 		xi = xi * 2
 
-		b_pos:Add( Vector( -0.5, -2, -0 ) )
+		b_pos:Add( Vector( -2, -1, -2 ) )
 		b_pos:Mul( math.ease.InOutSine( xi ) )
-		b_ang:Add( Angle( -4, 0, -5 ) )
+		b_ang:Add( Angle( -4, 0, -15 ) )
 		b_ang:Mul( math.ease.InOutSine( xi ) )
 
 		opos:Add( b_pos )

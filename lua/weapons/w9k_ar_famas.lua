@@ -7,19 +7,19 @@ SWEP.Spawnable							= true
 --
 -- Weapon configuration
 --
-SWEP.PrintName							= "SIG P229R"
+SWEP.PrintName							= "FN FAMAS"
 SWEP.Slot								= 1
 
 --
 -- Appearance
 --
-SWEP.ViewModel				= "models/weapons/v_sick_p228.mdl"
+SWEP.ViewModel				= "models/weapons/v_tct_famas.mdl"
 SWEP.ViewModelFOV			= 64
-SWEP.WorldModel				= "models/weapons/w_sig_229r.mdl"
+SWEP.WorldModel				= "models/weapons/w_tct_famas.mdl"
 
 -- Capacity
-SWEP.Primary.ClipSize					= 12
-SWEP.Primary.Ammo						= "pistol"
+SWEP.Primary.ClipSize					= 30
+SWEP.Primary.Ammo						= "smg1"
 
 -- Damage
 SWEP.DamageNear							= 30
@@ -30,7 +30,7 @@ SWEP.RangeFar							= 30
 -- Ability
 SWEP.Firemodes = {
 	{
-		Count = 1,
+		Count = math.huge,
 		Delay = ( 60 / 450 ),
 		PostBurstDelay = 0,
 	}
