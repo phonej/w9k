@@ -64,18 +64,24 @@ SWEP.Secondary.DefaultClip				= 0
 SWEP.Secondary.Automatic				= true
 SWEP.Secondary.Ammo						= "none"
 
-SWEP.RecoilUp = 2 -- degrees punched
-SWEP.RecoilUpDrift = 0.5 -- 50% will be smoothed
-SWEP.RecoilDecay = 10 -- 10 degrees per second
-SWEP.RecoilCS = false -- recoil returns
+SWEP.RecoilUp							= 2 -- degrees punched
+SWEP.RecoilUpDrift						= 0.5 -- 50% will be smoothed
+SWEP.RecoilDecay						= 10 -- 10 degrees per second
+SWEP.RecoilCS							= false -- recoil returns
+
+SWEP.SpreadHip							= 1 -- spread from the hip
+SWEP.SpreadShot							= 0.5 -- spread per shot
+SWEP.SpreadShotDecay					= 6 -- how much to deaay per second
+SWEP.SpreadShotDelay					= 0.04 -- time before spread decays after shot
 
 function SWEP:Initalize()
 	self.Primary.Automatic = true
 	self.Secondary.Automatic = true
-
 end
 
 function SWEP:SetupDataTables()
+	self:NetworkVar("Bool", 0, "FiredLastShot")
+
 	self:NetworkVar("Int", 0, "BurstCount")
 	self:NetworkVar("Int", 1, "Firemode")
 
@@ -85,9 +91,10 @@ function SWEP:SetupDataTables()
 	self:NetworkVar("Float", 3, "ReloadingTime")
 	self:NetworkVar("Float", 4, "StopSightTime")
 	self:NetworkVar("Float", 5, "SprintDelta")
-
 	self:NetworkVar("Float", 6, "RecoilP")
 	self:NetworkVar("Float", 7, "RecoilY")
+	self:NetworkVar("Float", 8, "Spread")
+	self:NetworkVar("Float", 9, "SpreadDelayTime")
 
 	self.Primary.DefaultClip = self:GetMaxClip1() * 2
 	self:SetFiremode(1)
@@ -131,6 +138,11 @@ function SWEP:PrimaryAttack()
 	end
 
 	if (self:GetBurstCount() + 1) > self:GetFiremodeTable().Count then
+		if !self:GetFiredLastShot() and self:GetBurstCount() == self:GetFiremodeTable().Count then
+			print("doing")
+			self:SetNextPrimaryFire( CurTime() + self:GetFiremodeTable().PostBurstDelay )
+			self:SetFiredLastShot(true)
+		end
 		return false
 	end
 
@@ -170,6 +182,8 @@ function SWEP:PrimaryAttack()
 		end
 		self:SetRecoilP( self:GetRecoilP() + (-self.RecoilUp * ( self.RecoilCS and 1 or self.RecoilUpDrift ) ) )
 	end
+	self:SetSpread( self:GetSpread() + self.SpreadShot )
+	self:SetSpreadDelayTime( CurTime() + self.SpreadShotDelay )
 	
 	return true
 end
@@ -181,8 +195,18 @@ end
 
 -- Bullets
 function SWEP:FireBullet(bullet)
-	bullet.Src = self.Owner:GetShootPos()
-	bullet.Dir = self.Owner:GetAimVector()
+
+	local dir = self:GetOwner():EyeAngles()
+	local dispersion = self:GetDispersion()
+	local shared_rand = CurTime()
+	local x = util.SharedRandom(shared_rand, -0.5, 0.5) + util.SharedRandom(shared_rand + 1, -0.5, 0.5)
+	local y = util.SharedRandom(shared_rand + 2, -0.5, 0.5) + util.SharedRandom(shared_rand + 3, -0.5, 0.5)
+	dir = dir:Forward() + (x * math.rad(dispersion) * dir:Right()) + (y * math.rad(dispersion) * dir:Up())
+
+	bullet.Src = self:GetOwner():GetShootPos()
+	bullet.Dir = dir
+	bullet.Distance = 32768
+
 	bullet.Callback = function( atk, tr, dmg )
 		-- Thank you Arctic, very cool
 		local ent = tr.Entity
@@ -203,7 +227,7 @@ function SWEP:FireBullet(bullet)
 
 
 			dmg:SetDamage( Lerp( 1-XD, bullet.DamageFar, bullet.DamageNear ) )
-			print( math.Round( (1-XD) * 100 ) .. "% effectiveness\t", math.floor( dmg:GetDamage() ) )
+			-- print( math.Round( (1-XD) * 100 ) .. "% effectiveness\t", math.floor( dmg:GetDamage() ) )
 		end
 		return
 	end
@@ -291,7 +315,9 @@ function SWEP:Think()
 	end
 	
 	if self:GetIdleIn() > 0 and self:GetIdleIn() <= CurTime() then
-		self:SendAnim( ACT_VM_IDLE, 1, false )
+		self:SendWeaponAnim( ACT_VM_IDLE )
+		self:SetPlaybackRate( 1 )
+		self:SetIdleIn( -1 )
 	end
 
 	local p = self:GetOwner()
@@ -306,8 +332,25 @@ function SWEP:Think()
 		end
 	end
 
-	if !self:GetOwner():KeyDown(IN_ATTACK) and self:GetBurstCount() != 0 and self:GetBurstCount() == self:GetFiremodeTable().Count then
-		self:SetBurstCount( 0 )
+	if self:GetSpreadDelayTime() < CurTime() then
+		self:SetSpread( math.Approach(self:GetSpread(), 0, FrameTime() * self.SpreadShotDecay ) )
+	end
+
+	if !self:GetOwner():KeyDown(IN_ATTACK) then
+		if self:GetBurstCount() != 0 and self:GetBurstCount() == self:GetFiremodeTable().Count then
+			self:SetBurstCount( 0 )
+			self:SetFiredLastShot(false)
+		elseif self:GetBurstCount() != 0 then
+			--if true then
+			--	if ( ( game.SinglePlayer() and SERVER ) or ( !game.SinglePlayer() ) ) then
+			--		self:PrimaryAttack()
+			--	end
+			--else
+				self:SetBurstCount( 0 )
+				self:SetNextPrimaryFire( CurTime() + self:GetFiremodeTable().PostBurstDelay ) -- Can feel uncomfortable.
+				self:SetFiredLastShot(false)
+			--end
+		end
 	end
 end
 
@@ -339,12 +382,22 @@ function SWEP:SendAnim( act, hold )
 	if loadin then
 		self:SetLoadIn( CurTime() + (anim.LoadIn or self:SequenceDuration()) )
 	end
+
+	self:SetIdleIn( CurTime() + self:SequenceDuration() )
 end
 
 function SWEP:TranslateFOV( fov )
 	return fov / Lerp( math.ease.InOutQuad( self:GetSightDelta() ), 1, self.IronSights.Mag )
 end
 
+-- Dispersion
+function SWEP:GetDispersion()
+	local dis = self.SpreadHip
+	dis = dis + self:GetSpread()
+	return dis
+end
+
+-- Get movement
 function SWEP:GetMovement()
 	local p = self:GetOwner()
 	if !IsValid(p) then
@@ -458,6 +511,59 @@ end
 --
 -- UI & Crosshair
 --
+
+local CLR_F = Color( 255, 255, 100, 255 )
+local CLR_B = Color( 0, 0, 0, 100 )
+local len = 1.5
+local thi = 1
+local gap = 10
+local sd = 1
 function SWEP:DoDrawCrosshair()
+
+	local l = ScreenScale(len)
+	local t = ScreenScale(thi)
+	local s = sd
+
+	local dispersion = math.rad(self:GetDispersion())
+	cam.Start3D()
+		local lool = ( EyePos() + ( EyeAngles():Forward() ) + ( dispersion * EyeAngles():Up() ) ):ToScreen()
+	cam.End3D()
+
+	local gau = (ScrH()/2)
+	gau = ( gau - lool.y )
+	gap = gau
+
+	local clock = Lerp( math.max( self:GetSightDelta(), self:GetSprintDelta() ), 1, 0 )
+	CLR_F.a = clock * 255
+	CLR_B.a = clock * 255
+	gap = gap / (clock)
+	l = l * clock
+	-- bg
+	surface.SetDrawColor( CLR_B )
+	-- bottom prong
+	surface.DrawRect( math.Round(( ScrW() / 2 ) - ( t / 2 ) + s), math.Round(( ScrH() / 2 ) + gap + s), t, l )
+
+	-- top prong
+	surface.DrawRect( math.Round(( ScrW() / 2 ) - ( t / 2 ) + s), math.Round(( ScrH() / 2 ) - l - gap + s), t, l )
+
+	-- left prong
+	surface.DrawRect( math.Round(( ScrW() / 2 ) - l - gap + s), math.Round(( ScrH() / 2 ) - ( t / 2 ) + s), l, t )
+
+	-- right prong
+	surface.DrawRect( math.Round(( ScrW() / 2 ) + gap + s), math.Round(( ScrH() / 2 ) - ( t / 2 ) + s), l, t )
+
+	-- fore
+	surface.SetDrawColor( CLR_F )
+	-- bottom prong
+	surface.DrawRect( math.Round(( ScrW() / 2 ) - ( t / 2 )), math.Round(( ScrH() / 2 ) + gap), t, l )
+
+	-- top prong
+	surface.DrawRect( math.Round(( ScrW() / 2 ) - ( t / 2 )), math.Round(( ScrH() / 2 ) - l - gap), t, l )
+
+	-- left prong
+	surface.DrawRect( math.Round(( ScrW() / 2 ) - l - gap), math.Round(( ScrH() / 2 ) - ( t / 2 )), l, t )
+
+	-- right prong
+	surface.DrawRect( math.Round(( ScrW() / 2 ) + gap), math.Round(( ScrH() / 2 ) - ( t / 2 )), l, t )
 	return true
 end

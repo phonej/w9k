@@ -41,6 +41,11 @@ SWEP.RangeFar							= 50
 -- Ability
 SWEP.Firemodes = {
 	{
+		Count = 3,
+		Delay = ( 60 / 950 ),
+		PostBurstDelay = 0.2,
+	},
+	{
 		Count = math.huge,
 		Delay = ( 60 / 950 ),
 		PostBurstDelay = 0,
