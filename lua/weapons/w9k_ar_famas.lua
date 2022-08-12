@@ -35,6 +35,7 @@ SWEP.RecoilSide							= 3 -- degrees punched, in either direction (-100% to 100%
 SWEP.RecoilSideDrift					= 0.6 -- 50% will be smoothed
 SWEP.RecoilSideDecay					= 6 -- 10 degrees per second
 SWEP.RecoilFlipChance					= ( 1 / 4 ) -- 1 in 7 chance for recoil flip
+SWEP.RecoilADSMult						= ( 1 / 3 ) -- multiply shot recoil by this amount when ads'd
 
 -- Damage
 SWEP.DamageNear							= 23

@@ -35,6 +35,7 @@ SWEP.RecoilSide							= 2 -- degrees punched, in either direction (-100% to 100%
 SWEP.RecoilSideDrift					= 0.5 -- 50% will be smoothed
 SWEP.RecoilSideDecay					= 10 -- 10 degrees per second
 SWEP.RecoilFlipChance					= ( 1 / 7 ) -- 1 in 7 chance for recoil flip
+SWEP.RecoilADSMult						= ( 1 / 3 ) -- multiply shot recoil by this amount when ads'd
 
 -- Spread
 SWEP.SpreadHip							= 1 -- spread from the hip
@@ -167,6 +168,7 @@ local HUToM = 0.0254
 --
 -- Firing function
 --
+local fuckads = 0
 function SWEP:PrimaryAttack()
 	local ammototake = 1
 
@@ -222,6 +224,7 @@ function SWEP:PrimaryAttack()
 	if game.SinglePlayer() then
 		self:CallOnClient("PrimaryAttack_SP")
 	else
+		fuckads = 2
 		local p = self:GetOwner()
 		if !IsValid(p) then p = false end
 		if p then
@@ -233,11 +236,12 @@ function SWEP:PrimaryAttack()
 	if !IsValid(p) then p = false end
 	if p then
 		local fli = self:GetRecoilFlip() and -1 or 1
+		local ads = Lerp( self:GetSightDelta(), 1, self.RecoilADSMult )
 		if ( game.SinglePlayer() and SERVER ) or ( CLIENT and !game.SinglePlayer() and IsFirstTimePredicted() ) then
-			p:SetEyeAngles( p:EyeAngles() + Angle( -self.RecoilUp * (1-self.RecoilUpDrift), fli * self.RecoilSide * (1-self.RecoilSideDrift) ) )
+			p:SetEyeAngles( p:EyeAngles() + Angle( ads * -self.RecoilUp * (1-self.RecoilUpDrift), ads * fli * self.RecoilSide * (1-self.RecoilSideDrift) ) )
 		end
-		self:SetRecoilP( self:GetRecoilP() + (-self.RecoilUp * self.RecoilUpDrift) )
-		self:SetRecoilY( self:GetRecoilY() + (fli * -self.RecoilSide * self.RecoilSideDrift) )
+		self:SetRecoilP( self:GetRecoilP() + (ads * -self.RecoilUp * self.RecoilUpDrift) )
+		self:SetRecoilY( self:GetRecoilY() + (ads * fli * -self.RecoilSide * self.RecoilSideDrift) )
 		if util.SharedRandom( "recoilflipinit", 0, 1, CurTime() ) < self.RecoilFlipChance then
 			self:SetRecoilFlip( !self:GetRecoilFlip() )
 		end
@@ -248,7 +252,6 @@ function SWEP:PrimaryAttack()
 	return true
 end
 
-local fuckads = 0
 function SWEP:PrimaryAttack_SP()
 	fuckads = 2
 	local p = self:GetOwner()
@@ -289,9 +292,16 @@ function SWEP:FireBullet(bullet)
 				XD = math.Clamp((range - min) / (max - min), 0, 1)
 			end
 
-
 			dmg:SetDamage( Lerp( 1-XD, bullet.DamageFar, bullet.DamageNear ) )
-			-- print( math.Round( (1-XD) * 100 ) .. "% effectiveness\t", math.floor( dmg:GetDamage() ) )
+
+			if ent:IsPlayer() then
+				local hg = tr.HitGroup
+				local gam = W9K.LimbCompensation[engine.ActiveGamemode()] or W9K.LimbCompensation[1]
+				local gem = W9K.BodyDamageMults
+				if gem[hg] then dmg:ScaleDamage(gem[hg]) end
+				if gam[hg] then dmg:ScaleDamage(gam[hg]) end
+			end
+
 		end
 		return
 	end
