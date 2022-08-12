@@ -85,7 +85,7 @@ SWEP.AutoSwitchTo						= false
 SWEP.AutoSwitchFrom						= false
 SWEP.m_WeaponDeploySpeed				= 10
 -- Don't touch this
-SWEP.UseHands							= true
+SWEP.UseHands							= false
 SWEP.Primary.Automatic					= true -- This should ALWAYS be true.
 SWEP.Secondary.ClipSize					= -1
 SWEP.Secondary.DefaultClip				= 0
